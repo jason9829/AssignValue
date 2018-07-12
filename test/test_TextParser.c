@@ -107,7 +107,7 @@ void test_parseAndConvertToNum_given_456_in_char_with_space_at_behind_should_ret
 }
 
 void test_parseAndConvertToNum_given_abc_in_char_return_0(void){
-  char *line = "a";
+  char *line = "abc";
   char *originalLine = line;
 
   TEST_ASSERT_FALSE(parseAndConvertToNum(&line));

@@ -14,35 +14,35 @@
  * zero value
  */
 int parseAndCompare(char **linePtr, char *cmpStr){
-  int cyclesForlinePtr = 0;
+  int cyclesForlinePtr = 0;             // Both cycles is to record no. of steps move by ptrs
   int cyclesForcmpStr = 0;
 
-  while(**linePtr != '\0' || *cmpStr != '\0'){
-    if((toupper(**linePtr) == toupper(*cmpStr))){
-      (*linePtr)++;
-                                                                       // How it works
-      cmpStr++;                                                        // a | b | c       *linePtr
-      cyclesForlinePtr++;                                              // a | b | c | ' '  cmpStr
-      cyclesForcmpStr++;                                               // If all correct, return 1
+  while(**linePtr != '\0' || *cmpStr != '\0'){      // If it's not end of line
+    if((toupper(**linePtr) == toupper(*cmpStr))){   // If both pointed character are the same
+
+      (*linePtr)++;                                 // How it works
+      cmpStr++;                                     // a | b | c       *linePtr
+      cyclesForlinePtr++;                           // a | b | c | ' '  cmpStr
+      cyclesForcmpStr++;                            // If all correct (ignore the space), return 1
     }
     else
-     if(isspace(**linePtr)){
+     if(isspace(**linePtr)){                        // If there's space then move (ignore the space)
          (*linePtr)++;
          cyclesForlinePtr++;
      }
-     else if(isspace(*cmpStr)){
+     else if(isspace(*cmpStr)){                     // If there's space then move (ignore the space)
          cmpStr++;
          cyclesForcmpStr++;
 
      }
-    else if (**linePtr == '='){
-      while(**linePtr != '\0' || isspace(**linePtr) ){
-        if(isdigit(**linePtr)){
-          return parseAndConvertToNum(linePtr);
+    else if (**linePtr == '='){               // If '=' was found then
+      while(**linePtr != '\0' || isspace(**linePtr) ){  // If there's space and not end of line , eg "= 1234"
+        if(isdigit(**linePtr)){                   // If digit was found
+          return parseAndConvertToNum(linePtr);   // Call function to convert the digit from char to int
         }
 
-        else if(isspace(**linePtr)){
-        (*linePtr)++;
+        else if(isspace(**linePtr)){            // If it's space then move ptrs
+        (*linePtr)++;                           //
         cmpStr++;
         cyclesForlinePtr++;
         cyclesForcmpStr++;
@@ -71,11 +71,11 @@ int parseAndCompare(char **linePtr, char *cmpStr){
     }
 
     else
-      return 1;
+       return 1;                 // compare "assign" if true return 1 (When there's is space)
 
-  }   return 1;                                   // If compared true then return 1
-
-}
+   }   return 1;                 // If compared true then return 1 (When there's no space)
+ 								// eg linePtr "abc" cmpStr "abc"
+ }
 
 /*
  * Parse and convert the first string number to value.
@@ -106,36 +106,37 @@ int parseAndConvertToNum(char **linePtr){
 
 int parseTextAndAssignValue(char **linePtr,VariableMapping *Variableptr){
 
-  int VariableSize = 0;
-  int MoveBackVarPtr = 0;
+  int VariableSize = 0;         // Count the size of variable in VariableTable
+  int MoveBackVarPtr = 0;       // Copy the value of VariableSize and move pointer back
+                                // bcz it's pointing at NULL after counting VariableSize
   if(Variableptr == NULL){
-    throwSimpleError(ERR_TABLE_IS_MISSING,"No Variable Table was found (NULL)");
+    throwSimpleError(ERR_TABLE_IS_MISSING,"No Variable Table was found (NULL/ empty)");
   }
   else
-    if(*linePtr == NULL || isspace(**linePtr)){
+    if(*linePtr == NULL || isspace(**linePtr)){     // If the line is NULL/ pointed at space
     throwSimpleError(ERR_UNKNOWN_COMMAND,"No command was found (NULL)");
     }
     else
-      if(parseAndCompare(linePtr,"assign")){
-        while(Variableptr->name != NULL){   // to get the size of the variable Table
+      if(parseAndCompare(linePtr,"assign")){       // If found "assign" in line
+        while(Variableptr->name != NULL){          // to get the size of the variable Table
           Variableptr++;
           VariableSize++;
           MoveBackVarPtr++;
         }
-        while(MoveBackVarPtr != 0 ){
-          Variableptr--;
+        while(MoveBackVarPtr != 0 ){            // Revert the ptr bcz it moved the counting
+          Variableptr--;                        // VariableSize
           MoveBackVarPtr--;
         }
-        while(VariableSize != 0){
+        while(VariableSize != 0){               // Keep inserting until it reached NULL
           *Variableptr->storage = parseAndCompare(linePtr,Variableptr->name);
           Variableptr++;
           VariableSize--;
           }
-          if(Variableptr->name == NULL && **linePtr != '\0'){
+          if(Variableptr->name == NULL && **linePtr != '\0'){ // If the name is NULL but there is still variable(s)
             throwSimpleError(ERR_UNKNOWN_VARIABLE,"No unknown variable was found (NULL)");
           }
       }
-      else
+      else  // If no assign was found in line
       throwSimpleError(ERR_MALFORM_ASSIGN,"No assign was found");
 
 
