@@ -17,20 +17,17 @@ int parseAndCompare(char **linePtr, char *cmpStr){
   int cyclesForlinePtr = 0;
   int cyclesForcmpStr = 0;
 
-  char *templinePtr = *linePtr;
-
   while(**linePtr != '\0' || *cmpStr != '\0'){
     if((toupper(**linePtr) == toupper(*cmpStr))){
       (*linePtr)++;
-      templinePtr++;                                                   // How it works
+                                                                       // How it works
       cmpStr++;                                                        // a | b | c       *linePtr
-      cyclesForlinePtr++;
-      cyclesForcmpStr++;                                                            // a | b | c | ' '  cmpStr
+      cyclesForlinePtr++;                                              // a | b | c | ' '  cmpStr
+      cyclesForcmpStr++;                                               // If all correct, return 1
     }
     else
      if(isspace(**linePtr)){
          (*linePtr)++;
-         templinePtr++;
          cyclesForlinePtr++;
      }
      else if(isspace(*cmpStr)){
@@ -43,30 +40,40 @@ int parseAndCompare(char **linePtr, char *cmpStr){
         if(isdigit(**linePtr)){
           return parseAndConvertToNum(linePtr);
         }
-        else{
-          (*linePtr)++;
-          templinePtr++;
-          cmpStr++;
-          cyclesForlinePtr++;
-          cyclesForcmpStr++;
-        }
-      }
-    }                                                                  // compare both string byte by byte ignoring the space
-    else if ((toupper(**linePtr) != toupper(*cmpStr)) && (*cmpStr) !='\0'){
 
-      while(cyclesForlinePtr!=0 && cyclesForcmpStr!=0){                                                     // a | b | c       *linePtr
-        (*linePtr)--;                                                  // a | c | b        cmpStr
-        cyclesForlinePtr--;
-		cmpStr--;
-        cyclesForcmpStr--;                                                     // First character correct so continue
-        }                                                          // Second character different so ptr revert back to 'a'
-        return 0;
+        else if(isspace(**linePtr)){
+        (*linePtr)++;
+        cmpStr++;
+        cyclesForlinePtr++;
+        cyclesForcmpStr++;
+        }
+        else if(**linePtr == '='){
+          (*linePtr)++;
+        }
+        else
+        throwSimpleError(ERR_NOT_A_NUMBER,"No number was found (Empty)");
+      }
 
     }
-    else
-    return 1;
+    else if ((toupper(**linePtr) != toupper(*cmpStr)) && (*cmpStr) !='\0'){         // compare both string byte by byte ignoring the space
+                                                                                    // a | b | c       *linePtr
+      while(cyclesForlinePtr!=0 && cyclesForcmpStr!=0){                             // a | c | b        cmpStr
+        (*linePtr)--;                                                               // First character correct so continue
+        cyclesForlinePtr--;                                                         // Second character different so ptr revert back to 'a'
+		    cmpStr--;
+        cyclesForcmpStr--;
+        }
+        return 0;                               // If not correct then return 0 after revert back
 
-  } return 1;
+    }
+    else if (isdigit(**linePtr)){
+        throwSimpleError(ERR_MALFORM_ASSIGN,"No equal sign was found");
+    }
+
+    else
+      return 1;
+
+  }   return 1;                                   // If compared true then return 1
 
 }
 
@@ -80,7 +87,7 @@ int parseAndCompare(char **linePtr, char *cmpStr){
 int parseAndConvertToNum(char **linePtr){
   int ConvertedNum = 0;
 
-  while(**linePtr != '\0'){
+  while(**linePtr != '\0' && isalpha(**linePtr) == 0){
     if(isdigit(**linePtr)){                                               //  How it works
         ConvertedNum = (**linePtr - '0') + (ConvertedNum * 10);           // *linePtr = '123' ; '0','1','2','3' = 48,49,50,51 in dec
         (*linePtr)++;                                                     // **linePtr = '1' , ConvertedNum = 0
@@ -97,19 +104,40 @@ int parseAndConvertToNum(char **linePtr){
 }
 
 
-int parseTextAndAssignValue(char **line,VariableMapping *Variableptr){
+int parseTextAndAssignValue(char **linePtr,VariableMapping *Variableptr){
 
+  int VariableSize = 0;
+  int MoveBackVarPtr = 0;
   if(Variableptr == NULL){
     throwSimpleError(ERR_TABLE_IS_MISSING,"No Variable Table was found (NULL)");
   }
   else
-    if(*line == NULL || isspace(**line)){
+    if(*linePtr == NULL || isspace(**linePtr)){
     throwSimpleError(ERR_UNKNOWN_COMMAND,"No command was found (NULL)");
     }
     else
-      if(parseAndCompare(line,"assign")){
-        return 1;
+      if(parseAndCompare(linePtr,"assign")){
+        while(Variableptr->name != NULL){   // to get the size of the variable Table
+          Variableptr++;
+          VariableSize++;
+          MoveBackVarPtr++;
+        }
+        while(MoveBackVarPtr != 0 ){
+          Variableptr--;
+          MoveBackVarPtr--;
+        }
+        while(VariableSize != 0){
+          *Variableptr->storage = parseAndCompare(linePtr,Variableptr->name);
+          Variableptr++;
+          VariableSize--;
+          }
+          if(Variableptr->name == NULL && **linePtr != '\0'){
+            throwSimpleError(ERR_UNKNOWN_VARIABLE,"No unknown variable was found (NULL)");
+          }
       }
+      else
+      throwSimpleError(ERR_MALFORM_ASSIGN,"No assign was found");
+
 
 
 }
