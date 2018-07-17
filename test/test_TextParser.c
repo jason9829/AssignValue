@@ -165,6 +165,30 @@ void test_parseTextAndAssignValue_given_input_command_is_NULL_should_do_nothing(
 }
 
 // assign orange  = 21346 apple = 1 lemon=10
+void test_parseTextAndAssignValue_VarTable_not_in_order_given_orange_21346_apple_1_lemon_10_should_assigned_correctly(void) {
+  CEXCEPTION_T e;
+  int orange = 0, apple = 0, lemon = 0;
+  VariableMapping varTableMapping[] = {
+    {"apple", &apple},
+    {"orange", &orange},
+    {"lemon", &lemon},
+    {NULL, NULL},
+  };
+  char *line = "assign orange  = 21346 apple = 1 lemon=10";
+
+  Try {
+    parseTextAndAssignValue(&line, varTableMapping);
+
+    TEST_ASSERT_EQUAL(21346, orange);
+    TEST_ASSERT_EQUAL(1, apple);
+    TEST_ASSERT_EQUAL(10, lemon);
+  } Catch(e) {
+    printf(e->errorMsg);
+    freeError(e);
+  }
+}
+
+// assign orange  = 21346 apple = 1 lemon=10
 void test_parseTextAndAssignValue_given_orange_21346_apple_1_lemon_10_should_assigned_correctly(void) {
   CEXCEPTION_T e;
   int orange = 0, apple = 0, lemon = 0;
@@ -187,7 +211,6 @@ void test_parseTextAndAssignValue_given_orange_21346_apple_1_lemon_10_should_ass
     freeError(e);
   }
 }
-
 void test_parseTextAndAssignValue_given_melon_and_value_with_trailing_spaces_should_parse_properly(void) {
   CEXCEPTION_T e;
   int melon = 0;

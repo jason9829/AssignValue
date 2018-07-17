@@ -108,7 +108,9 @@ int parseTextAndAssignValue(char **linePtr,VariableMapping *Variableptr){
 
   int VariableSize = 0;         // Count the size of variable in VariableTable
   int MoveBackVarPtr = 0;       // Copy the value of VariableSize and move pointer back
-                                // bcz it's pointing at NULL after counting VariableSize
+  int AssignValue = 0;          // bcz it's pointing at NULL after counting VariableSize
+  int SearchingCycle = 0;
+
   if(Variableptr == NULL){
     throwSimpleError(ERR_TABLE_IS_MISSING,"No Variable Table was found (NULL/ empty)");
   }
@@ -128,9 +130,30 @@ int parseTextAndAssignValue(char **linePtr,VariableMapping *Variableptr){
           MoveBackVarPtr--;
         }
         while(VariableSize != 0){               // Keep inserting until it reached NULL
-          *Variableptr->storage = parseAndCompare(linePtr,Variableptr->name);
-          Variableptr++;
-          VariableSize--;
+          AssignValue = parseAndCompare(linePtr,Variableptr->name);
+          if(AssignValue != 0){
+            *Variableptr->storage = AssignValue;
+            Variableptr++;
+            VariableSize--;
+          }
+           else{
+             while(Variableptr->name != NULL){      // when there's still name
+               AssignValue = parseAndCompare(linePtr,Variableptr->name);
+               if(AssignValue == 0){        // if name not find, keep searching
+                  Variableptr++;
+                  SearchingCycle++;
+                  }
+               else{
+                 *Variableptr->storage = AssignValue;  // if found then assign the value
+
+                 while(SearchingCycle !=0){       // once assigned revert back to first name
+                   Variableptr--;
+                   SearchingCycle--;
+                   VariableSize--;
+                 }
+               }
+             }
+           }
           }
           if(Variableptr->name == NULL && **linePtr != '\0'){ // If the name is NULL but there is still variable(s)
             throwSimpleError(ERR_UNKNOWN_VARIABLE,"No unknown variable was found (NULL)");
